@@ -3,6 +3,7 @@
     <script src="three.js/three.js"></script>
     <script src="three.js/TrackballControls.js"></script>
     <script src="three.js/extras/helpers/ArrowHelper.js"></script>
+    <script src="three.js/extras/helpers/AxisHelper.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
     <script src="pnav.js"></script>
 
@@ -19,54 +20,55 @@ $(function() {
   var mesh;
 
   var field = new pnav.fields.PotentialField();
-  //field.addBehavior(new pnav.behaviors.GoalSeeking(5000, 5000, 0, 1000));
-  field.addBehavior(new pnav.behaviors.CylinderObstacle(0, 1000, 500, 2000));
+  field.addBehavior(new pnav.behaviors.GoalSeeking(-500, -500, 0, 1000));
+  field.addBehavior(new pnav.behaviors.CylinderObstacle(1500, -1000, 300, 1000));
 
   init();
   animate();
 
-  function vectorArrow(scene, x, y, z, v) {
+  function vectorArrow(x, y, z, v) {
     if (v.magnitude() < 0.0001) {
-      return;
+      return null;
     }
     var v = v.copy();
-    v.scale(400);
-    var material = new THREE.LineBasicMaterial({ color: 0xff0000 });
-    //var geometry = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 2, 1, 2, false), material);
-    //cylinder.applyMatrix(new THREE.Matrix4().translate(new THREE.Vector3(v[0], v[1], v[2])));
-    //cylinder.overdraw = true;
-    //var geometry = new THREE.CubeGeometry(1, 1, 1);
-    //geometry.applyMatrix(new THREE.Matrix4().translate(new THREE.Vector3(x, y, z)));
-    var geometry = new THREE.Geometry();
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(x, y, z)));
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(x + v.x, y + v.y, z + v.z)));
-    geometry.vertices.push(new THREE.Vertex(new THREE.Vector3(x, y, z)));
-    var line = new THREE.Line(geometry, material);
-    scene.add(line);
-
-    var sphere = new THREE.SphereGeometry(20, 5, 5);
-    sphere.applyMatrix(new THREE.Matrix4().translate(new THREE.Vector3(x + v.x, y + v.y, z + v.z)));
-    var sphereMesh = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ color: 0x0000ff }));
-    scene.add(sphereMesh);
+    var arrow = new THREE.ArrowHelper(
+      new THREE.Vector3(v.x, v.y, v.z),
+      new THREE.Vector3(x, y, z),
+      v.magnitude() * 100,
+      0x111111);
+    return arrow;
   }
 
   function init() {
 
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
-    //camera.position.x = 50
-    //camera.position.y = -20
+    camera.position.x = 0
+    camera.position.y = 0
     camera.position.z = 20000;
-    camera.lookAt(new THREE.Vector3(5000, 5000, 0));
+    camera.lookAt(new THREE.Vector3(2500, 0, 2500));
 
     scene = new THREE.Scene();
     scene.add(camera);
+    scene.add(new THREE.AxisHelper(5000));
 
-    for (x = -5000; x < 5000; x += 700) {
-      for (y = -5000; y < 5000; y += 700) {
-        for (z = 0; z < 5000; z += 700) {
-          var v = field.vectorAt(new Vector3(x, y, z));
-          vectorArrow(scene, x, y, z, v);
-          //scene.add(vectorArrow(x, y, z, new Vector3(1, 0, 0)));
+    var material = new THREE.MeshBasicMaterial({
+      color: 0x0000ff,
+      wireframe: true
+    });
+    var cylinder = new THREE.Mesh(new THREE.SphereGeometry(150, 10, 10), material);
+    cylinder.position.x = 1500;
+    cylinder.position.y = -1000;
+    cylinder.overdraw = true;
+    scene.add(cylinder);
+
+    for (x = -3000; x < 3000; x += 250) {
+      for (y = -3000; y < 3000; y += 250) {
+        for (z = 0; z <= 0; z += 250) {
+          var v = field.vectorAt(new pnav.math.Vector3(x + 1, y + 1, z + 1));
+          var arrow = vectorArrow(x, y, z, v);
+          if (arrow) {
+            scene.add(arrow);
+          }
         }
       }
     }
