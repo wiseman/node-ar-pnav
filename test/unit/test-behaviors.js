@@ -38,6 +38,8 @@ utest('CylinderObstacle', {
     assert.deepEqual(forceVec, new nav.math.Vector3(0, 0, 0));
     forceVec = behavior.vectorAt(new nav.math.Vector3(6, 0, 0));
     assert.deepEqual(forceVec, new nav.math.Vector3(0.8, 0, 0));
+    forceVec = behavior.vectorAt(new nav.math.Vector3(0, 0, 0));
+    assert.equal(forceVec.magnitude(), 1);
     forceVec = behavior.vectorAt(new nav.math.Vector3(6, 0, 6));
     var forceVec2 = behavior.vectorAt(new nav.math.Vector3(6, 0, 8));
     assert.deepEqual(forceVec, forceVec2);
