@@ -34,14 +34,13 @@ utest('CylinderObstacle', {
     assert.deepEqual(forceVec, new nav.math.Vector3(1, 0, 0));
     forceVec = behavior.vectorAt(new nav.math.Vector3(0, 1, 0));
     assert.deepEqual(forceVec, new nav.math.Vector3(0, 1, 0));
-    var forceVec = behavior.vectorAt(new nav.math.Vector3(10, 0, 0));
+    forceVec = behavior.vectorAt(new nav.math.Vector3(10, 0, 0));
     assert.deepEqual(forceVec, new nav.math.Vector3(0, 0, 0));
-    var forceVec = behavior.vectorAt(new nav.math.Vector3(6, 0, 0));
+    forceVec = behavior.vectorAt(new nav.math.Vector3(6, 0, 0));
     assert.deepEqual(forceVec, new nav.math.Vector3(0.8, 0, 0));
-    var forceVec = behavior.vectorAt(new nav.math.Vector3(6, 6, 6));
-    assert.deepEqual(forceVec, new nav.math.Vector3(-1, 0, 0));
-    assert.equal(forceVec.x, -Math.sqrt(1/3));
-    assert.equal(forceVec.y, -Math.sqrt(1/3));
-    assert.equal(forceVec.z, -Math.sqrt(1/3));
+    forceVec = behavior.vectorAt(new nav.math.Vector3(6, 0, 6));
+    var forceVec2 = behavior.vectorAt(new nav.math.Vector3(6, 0, 8));
+    assert.deepEqual(forceVec, forceVec2);
+    assert.deepEqual(forceVec, new nav.math.Vector3(0.8, 0, 0));
   }
 });
