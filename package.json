@@ -1,12 +1,12 @@
 {
   "author": "John Wiseman <jjwiseman@gmail.com>",
-  "name": "ar-drone-nav",
-  "description": "A navigation library for Parrot Ar.Drone 2.0 vehicles.",
+  "name": "node-ar-pnav",
+  "description": "A potential field navigation library for Parrot Ar.Drone 2.0 vehicles.",
   "version": "0.0.1",
-  "homepage": "https://github.com/wiseman/ar-drone-nav",
+  "homepage": "https://github.com/wiseman/node-ar-pnav",
   "repository": {
     "type": "git",
-    "url": "git://github.com/wiseman/ar-drone-nav.git"
+    "url": "git://github.com/wiseman/node-ar-pnav.git"
   },
   "main": "./index",
   "scripts": {
