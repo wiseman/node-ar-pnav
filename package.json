@@ -2,6 +2,13 @@
   "author": "John Wiseman <jjwiseman@gmail.com>",
   "name": "node-ar-pnav",
   "description": "A potential field navigation library for Parrot Ar.Drone 2.0 vehicles.",
+  "keywords": [
+    "navigation",
+    "robotics",
+    "robotjs",
+    "AR.Drone",
+    "potential field"
+  ],
   "version": "0.0.1",
   "homepage": "https://github.com/wiseman/node-ar-pnav",
   "repository": {
