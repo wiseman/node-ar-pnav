@@ -1,0 +1,23 @@
+{
+  "author": "John Wiseman <jjwiseman@gmail.com>",
+  "name": "ar-drone-nav",
+  "description": "A navigation library for Parrot Ar.Drone 2.0 vehicles.",
+  "version": "0.0.1",
+  "homepage": "https://github.com/wiseman/ar-drone-nav",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/wiseman/ar-drone-nav.git"
+  },
+  "main": "./index",
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "dependencies": {
+    "ar-drone": "0.0.5"
+  },
+  "devDependencies": {
+    "utest": "0.0.6",
+    "urun": "0.0.6",
+    "sinon": "1.4.2"
+  }
+}
