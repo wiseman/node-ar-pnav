@@ -435,21 +435,13 @@ process.binding = function (name) {
 require.define("/package.json",function(require,module,exports,__dirname,__filename,process,global){module.exports = {"main":"./index"}
 });
 
-require.define("/index.js",function(require,module,exports,__dirname,__filename,process,global){exports.fields = require('./lib/fields');
-exports.behaviors = require('./lib/behaviors');
+require.define("/index.js",function(require,module,exports,__dirname,__filename,process,global){exports.PotentialField = require('./lib/fields');
+exports.behavior = require('./lib/behaviors');
 exports.math = require('./lib/math.js');
 
 });
 
 require.define("/lib/fields.js",function(require,module,exports,__dirname,__filename,process,global){var math = require('./math');
-
-/**
- * @constructor
- * @interface
- */
-Behavior = function() {};
-Behavior.prototype.vectorAt = function(loc) {};
-
 
 PotentialField = function() {
   this.behaviors = [];
@@ -466,7 +458,9 @@ PotentialField = function() {
 PotentialField.prototype.vectorAt = function(loc) {
   var vector = new math.Vector3();
   for (var i = 0; i < this.behaviors.length; i++) {
-    vector.add(this.behaviors[i].vectorAt(loc));
+    var behavior = this.behaviors[i].behavior;
+    var scale = this.behaviors[i].scale;
+    vector.add(behavior.vectorAt(loc).scale(scale));
   }
   var mag = vector.magnitude();
   if (mag > 1.0) {
@@ -476,13 +470,17 @@ PotentialField.prototype.vectorAt = function(loc) {
 };
 
 
-PotentialField.prototype.addBehavior = function(behavior) {
-  this.behaviors.push(behavior);
+PotentialField.prototype.addBehavior = function(behavior, opt_scale) {
+  var scale = opt_scale || 1.0;
+  this.behaviors.push({
+    'behavior': behavior,
+    'scale': scale
+  });
   return this;
 }
 
 
-module.exports.PotentialField = PotentialField;
+module.exports = PotentialField;
 
 });
 
@@ -561,27 +559,27 @@ module.exports.scale = scale;
 require.define("/lib/behaviors.js",function(require,module,exports,__dirname,__filename,process,global){var math = require('./math');
 
 
-GoalSeeking = function(x, y, z, slowDist) {
+GoalSeeking = function(x, y, z, opt_slowDistance) {
   this.location = new math.Vector3(x, y, z);
-  this.slowDist = slowDist;
+  this.slowDistance = opt_slowDistance || 1000;
 };
 
 GoalSeeking.prototype.vectorAt = function(loc) {
   var distance = this.location.distanceTo(loc);
-  var vel = null;
+  var force = null;
   if (distance < .001) {
-    vel = new math.Vector3(0, 0, 0);
+    force = new math.Vector3(0, 0, 0);
   } else {
-    vel = this.location.copy().subtract(loc)
-    vel.setMagnitude(math.scale(distance, 0, this.slowDist));
+    force = this.location.copy().subtract(loc)
+    force.setMagnitude(math.scale(distance, 0, this.slowDistance));
   }
-  return vel;
+  return force;
 };
 
 
-CylinderObstacle = function(x, y, opt_minDist, opt_cutoffDist) {
-  this.minDist = opt_minDist || 300;
-  this.cutoffDist = opt_cutoffDist || 1000;
+CylinderObstacle = function(x, y, opt_minDistance, opt_cutoffDistance) {
+  this.minDistance = opt_minDistance || 300;
+  this.cutoffDistance = opt_cutoffDistance || 1000;
   this.location = new math.Vector3(x, y);
 };
 
@@ -589,10 +587,15 @@ CylinderObstacle.prototype.vectorAt = function(loc) {
   var loc = loc.copy();
   loc.z = 0;
   var distance = this.location.distanceTo(loc);
-  var vel = loc.copy().subtract(this.location);
-  vel.z = 0;
-  vel.setMagnitude(1.0 - math.scale(distance, this.minDist, this.cutoffDist));
-  return vel;
+  var force = null;
+  if (distance < .001) {
+    force = new math.Vector3(1, 0, 0);
+  } else {
+    force = loc.copy().subtract(this.location);
+    force.z = 0;
+    force.setMagnitude(1.0 - math.scale(distance, this.minDistance, this.cutoffDistance));
+  }
+  return force;
 };
 
 
@@ -602,7 +605,6 @@ module.exports.CylinderObstacle = CylinderObstacle;
 });
 
 require.define("/browser/index.js",function(require,module,exports,__dirname,__filename,process,global){pnav = require('../index.js');
-console.log(pnav);
 
 });
 require("/browser/index.js");

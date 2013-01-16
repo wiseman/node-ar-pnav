@@ -8,9 +8,15 @@ var nav = require(common.root);
 
 utest('GoalSeeking', {
   'testGoalSeeking': function() {
-    var behavior = new nav.behaviors.GoalSeeking(0, 0, 0, 5);
+    var behavior;
+    behavior = new nav.behavior.GoalSeeking(0, 0, 0);
+    assert.strictEqual(behavior.slowDistance, 1000);
+    behavior = new nav.behavior.GoalSeeking(0, 0, 0, 5);
+    assert.strictEqual(behavior.slowDistance, 5);
     var forceVec = behavior.vectorAt(new nav.math.Vector3(1, 0, 0));
     assert.deepEqual(forceVec, new nav.math.Vector3(-0.2, 0, 0));
+    forceVec = behavior.vectorAt(new nav.math.Vector3(2, 0, 0));
+    assert.deepEqual(forceVec, new nav.math.Vector3(-0.4, 0, 0));
     forceVec = behavior.vectorAt(new nav.math.Vector3(5, 0, 0));
     assert.deepEqual(forceVec, new nav.math.Vector3(-1, 0, 0));
     forceVec = behavior.vectorAt(new nav.math.Vector3(0, 1, 0));
@@ -27,7 +33,11 @@ utest('GoalSeeking', {
 
 utest('CylinderObstacle', {
   'testCylinderObstacle': function() {
-    var behavior = new nav.behaviors.CylinderObstacle(0, 0, 5, 10);
+    var behavior;
+    behavior = new nav.behavior.CylinderObstacle(0, 0);
+    assert.strictEqual(behavior.minDistance, 300);
+    assert.strictEqual(behavior.cutoffDistance, 1000);
+    behavior = new nav.behavior.CylinderObstacle(0, 0, 5, 10);
     var forceVec = behavior.vectorAt(new nav.math.Vector3(1, 0, 0));
     assert.deepEqual(forceVec, new nav.math.Vector3(1, 0, 0));
     forceVec = behavior.vectorAt(new nav.math.Vector3(5, 0, 0));

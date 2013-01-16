@@ -12,19 +12,67 @@
   <body>
     <script>
 $(function() {
-  var camera;
-  var scene;
-  var renderer;
-  var geometry;
-  var material;
-  var mesh;
+  var theCamera;
+  var theScene;
+  var theRenderer;
+  var theControls;
+  var theField;
+  var theDrone;
 
-  var field = new pnav.fields.PotentialField();
-  field.addBehavior(new pnav.behaviors.GoalSeeking(-500, -500, 0, 1000));
-  field.addBehavior(new pnav.behaviors.CylinderObstacle(1500, -1000, 300, 1000));
 
-  init();
-  animate();
+  var Drone = function(field, x, y, z) {
+    THREE.Object3D.call(this);
+    this.field = field;
+    this.lowVel = 0;
+    var material = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+    });
+    var sphere = new THREE.Mesh(new THREE.SphereGeometry(50, 20, 20), material);
+    sphere.position.x = x;
+    sphere.position.y = y;
+    sphere.position.z = z;
+    sphere.overdraw = true;
+    this.add(sphere);
+  }
+  Drone.prototype = Object.create(THREE.Object3D.prototype);
+
+  Drone.prototype.step = function() {
+    var vel = this.field.vectorAt(new pnav.math.Vector3(this.position.x, this.position.y, this.position.z));
+    if (vel.magnitude() < .001) {
+      this.lowVel += 1;
+    } else {
+      this.lowVel = 0;
+      vel.scale(30);
+      this.position.x += vel.x;
+      this.position.y += vel.y;
+      this.position.z += vel.z;
+    }
+  };
+
+  Drone.prototype.moveTo = function(x, y, z) {
+    this.position.x = x;
+    this.position.y = y;
+    this.position.z = z;
+    this.lowVel = 0;
+  }
+
+
+  function addObstacle(x, y, radius) {
+    theField.addBehavior(new pnav.behavior.CylinderObstacle(x, y, radius, radius + 1000));
+    var material = new THREE.MeshBasicMaterial({
+      color: 0x0000ff,
+    });
+    var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius / 2, 20, 20), material);
+    sphere.position.x = x;
+    sphere.position.y = y;
+    theScene.add(sphere);
+  }
+
+
+  function addGoal(x, y, z, slowDownDist) {
+    theField.addBehavior(new pnav.behavior.GoalSeeking(x, y, z, slowDownDist));
+  }
+
 
   function vectorArrow(x, y, z, v) {
     if (v.magnitude() < 0.0001) {
@@ -34,76 +82,84 @@ $(function() {
     var arrow = new THREE.ArrowHelper(
       new THREE.Vector3(v.x, v.y, v.z),
       new THREE.Vector3(x, y, z),
-      v.magnitude() * 100,
-      0x111111);
+      v.magnitude() * 150,
+      0x44444);
     return arrow;
   }
 
+
   function init() {
+    theCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+    theCamera.position.x = 0
+    theCamera.position.y = 0
+    theCamera.position.z = 20000;
+    theCamera.lookAt(new THREE.Vector3(2500, 0, 2500));
 
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
-    camera.position.x = 0
-    camera.position.y = 0
-    camera.position.z = 20000;
-    camera.lookAt(new THREE.Vector3(2500, 0, 2500));
+    theScene = new THREE.Scene();
+    theScene.add(theCamera);
+    theScene.add(new THREE.AxisHelper(5000));
 
-    scene = new THREE.Scene();
-    scene.add(camera);
-    scene.add(new THREE.AxisHelper(5000));
+    theField = new pnav.PotentialField();
+    addGoal(-500, -500, 0, 1000);
+    addObstacle(1000, -1500, 1000);
+    addObstacle(-500, 100, 300);
 
-    var material = new THREE.MeshBasicMaterial({
-      color: 0x0000ff,
-      wireframe: true
-    });
-    var cylinder = new THREE.Mesh(new THREE.SphereGeometry(150, 10, 10), material);
-    cylinder.position.x = 1500;
-    cylinder.position.y = -1000;
-    cylinder.overdraw = true;
-    scene.add(cylinder);
+    theDrone = new Drone(theField, 0, 0, 0);
+    theScene.add(theDrone);
 
     for (x = -3000; x < 3000; x += 250) {
       for (y = -3000; y < 3000; y += 250) {
         for (z = 0; z <= 0; z += 250) {
-          var v = field.vectorAt(new pnav.math.Vector3(x + 1, y + 1, z + 1));
+          var v = theField.vectorAt(new pnav.math.Vector3(x + 1, y + 1, z + 1));
           var arrow = vectorArrow(x, y, z, v);
           if (arrow) {
-            scene.add(arrow);
+            theScene.add(arrow);
           }
         }
       }
     }
-    material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
 
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    theRenderer = new THREE.WebGLRenderer({
+    'antialias': true
+    });
+    theRenderer.setSize(window.innerWidth, window.innerHeight);
+    theRenderer.setClearColorHex(0xeeeeee, 1);
 
     // trackback _controls settings.
     var radius = 60;
-    controls = new THREE.TrackballControls(camera, renderer.domElement);
-    controls.rotateSpeed = 0.5;
-    controls.zoomSpeed = 1.2;
-    controls.panSpeed = 0.2;
-    controls.noZoom = false;
-    controls.noPan = false;
-    controls.staticMoving = false;
-    controls.dynamicDampingFactor = 0.3;
-    controls.minDistance = radius * 1.1;
-    controls.maxDistance = radius * 100;
-    controls.keys = [65, 83, 68]; // [ rotateKey, zoomKey, panKey ]
+    theControls = new THREE.TrackballControls(theCamera, theRenderer.domElement);
+    theControls.rotateSpeed = 0.5;
+    theControls.zoomSpeed = 1.2;
+    theControls.panSpeed = 0.2;
+    theControls.noZoom = false;
+    theControls.noPan = false;
+    theControls.staticMoving = false;
+    theControls.dynamicDampingFactor = 0.3;
+    theControls.minDistance = radius * 1.1;
+    theControls.maxDistance = radius * 100;
+    theControls.keys = [65, 83, 68]; // [ rotateKey, zoomKey, panKey ]
 
-    document.body.appendChild( renderer.domElement );
+    document.body.appendChild(theRenderer.domElement);
 
   }
+
 
   function animate() {
-
-    // note: three.js includes requestAnimationFrame shim
-    requestAnimationFrame( animate );
-
-    controls.update();
-    renderer.render( scene, camera );
-
+    requestAnimationFrame(animate);
+    theControls.update();
+    theDrone.step();
+    if (theDrone.lowVel > 100) {
+      theDrone.moveTo(3000 - Math.random() * 6000,
+                      3000 - Math.random() * 6000,
+                      0);
+    }
+    theRenderer.render(theScene, theCamera);
   }
+
+
+  init();
+  animate();
+
 });
     </script>
   </body>
